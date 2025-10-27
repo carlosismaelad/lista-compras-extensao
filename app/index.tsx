@@ -1,5 +1,5 @@
 import { StatusBar } from "expo-status-bar";
-import React from "react";
+import React, { useEffect } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -14,8 +14,13 @@ import {
   Shadows,
   Spacing,
 } from "../constants/theme";
+import { initializeDatabase } from "../database/database";
 
 export default function HomeScreen() {
+  useEffect(() => {
+    initializeDatabase();
+  }, []);
+
   const handleStartNow = () => {
     // router.push("/menu"); // Temporário até criar a tela de menu
     console.log("Botão Começar Agora pressionado! - UPDATED");

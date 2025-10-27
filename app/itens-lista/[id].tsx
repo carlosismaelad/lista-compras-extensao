@@ -130,19 +130,25 @@ const ItensListaScreen = () => {
         renderItem={({ item }) => {
           const valorTotal = Number(item.quantity) * Number(item.unit_price);
           return (
-            <View style={styles.itemRow}>
-              <View
-                style={{ flex: 1, flexDirection: "row", alignItems: "center" }}
-              >
-                <Text style={styles.itemName}>{item.name}</Text>
-                <View style={styles.itemInfo}>
-                  <Text style={styles.itemQtd}>Qtd: {item.quantity}</Text>
-                  <Text style={styles.itemValorTotal}>
-                    R${" "}
-                    {valorTotal.toLocaleString("pt-BR", {
-                      minimumFractionDigits: 2,
-                    })}
-                  </Text>
+            <View style={styles.itemRowWrapper}>
+              <View style={styles.itemRow}>
+                <View
+                  style={{
+                    flex: 1,
+                    flexDirection: "row",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text style={styles.itemName}>{item.name}</Text>
+                  <View style={styles.itemInfo}>
+                    <Text style={styles.itemQtd}>Qtd: {item.quantity}</Text>
+                    <Text style={styles.itemValorTotal}>
+                      R${" "}
+                      {valorTotal.toLocaleString("pt-BR", {
+                        minimumFractionDigits: 2,
+                      })}
+                    </Text>
+                  </View>
                 </View>
               </View>
               <View style={{ position: "relative", zIndex: 30, marginLeft: 4 }}>
@@ -162,7 +168,6 @@ const ItensListaScreen = () => {
                       onPress={async () => {
                         setMenuItemId(null);
                         setEditMode(true);
-                        // setEditItemId(item.id); // não utilizado
                         setNome(item.name);
                         setMarca(item.brand || "");
                         setQuantidade(String(item.quantity));
@@ -382,15 +387,19 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
     textAlign: "center",
   },
-  itemRow: {
+  itemRowWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    marginBottom: Spacing.sm,
+  },
+  itemRow: {
+    flex: 1,
     backgroundColor: AppColors.surface,
     borderRadius: BorderRadius.md,
     padding: Spacing.md,
-    marginBottom: Spacing.sm,
     ...Shadows.sm,
+    flexDirection: "row",
+    alignItems: "center",
   },
   itemName: {
     fontSize: FontSizes.md,

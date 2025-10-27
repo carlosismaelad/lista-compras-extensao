@@ -19,6 +19,18 @@ export default function RootLayout() {
           name="index"
           options={{ headerShown: false, title: "Home" }}
         />
+        <Stack.Screen
+          name="menu"
+          options={{ headerShown: true, title: "Menu" }}
+        />
+        <Stack.Screen
+          name="minhas-listas"
+          options={{ headerShown: true, title: "Minhas Listas" }}
+        />
+        <Stack.Screen
+          name="nova-lista"
+          options={{ headerShown: true, title: "Nova Lista" }}
+        />
         {/* <Stack.Screen
           name="modal"
           options={{ presentation: "modal", title: "Modal" }}

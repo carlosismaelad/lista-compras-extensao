@@ -1,3 +1,4 @@
+import { useRouter, type RelativePathString } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect } from "react";
 import {
@@ -17,13 +18,13 @@ import {
 import { initializeDatabase } from "../database/database";
 
 export default function HomeScreen() {
+  const router = useRouter();
   useEffect(() => {
     initializeDatabase();
   }, []);
 
   const handleStartNow = () => {
-    // router.push("/menu"); // Temporário até criar a tela de menu
-    console.log("Botão Começar Agora pressionado! - UPDATED");
+    router.push({ pathname: "menu" as RelativePathString });
   };
 
   return (

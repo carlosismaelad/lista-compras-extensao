@@ -31,20 +31,23 @@ const ItensListaScreen = () => {
   const [loading, setLoading] = useState(false);
   const [menuItemId, setMenuItemId] = useState<number | null>(null); // id do item com menu aberto
   const [editMode, setEditMode] = useState(false); // se está editando
-  const [editItemId, setEditItemId] = useState<number | null>(null); // id do item em edição
-  const router = useRouter();
-
-  useEffect(() => {
+  // const [editItemId, setEditItemId] = useState<number | null>(null); // id do item em edição (não utilizado)
+  // Atualiza o total da lista recalculando a soma dos itens
+  const refreshList = async () => {
     if (id) {
-      listService.getListById(Number(id)).then(setList);
-      itemService.getByListId(Number(id)).then(setItems);
-    }
-  }, [id]);
-
-  // Atualiza o total da lista sempre que um item for adicionado
-  const refreshList = () => {
-    if (id) {
-      listService.getListById(Number(id)).then(setList);
+      // Busca todos os itens da lista
+      const itens = await itemService.getByListId(Number(id));
+      // Soma o total
+      const total = itens.reduce(
+        (acc: number, item: any) =>
+          acc + Number(item.quantity) * Number(item.unit_price),
+        0
+      );
+      // Atualiza o campo total_value da lista no banco
+      await listService.updateList(Number(id), { total_value: total });
+      // Busca a lista atualizada
+      const listaAtualizada = await listService.getListById(Number(id));
+      setList(listaAtualizada);
     }
   };
 
@@ -70,9 +73,9 @@ const ItensListaScreen = () => {
     }
     setLoading(true);
     try {
-      if (editMode && editItemId) {
+      if (editMode && menuItemId) {
         // Atualizar item existente
-        await itemService.updateItem(editItemId, {
+        await itemService.updateItem(menuItemId, {
           name: nome,
           brand: marca,
           quantity: Number(quantidade),
@@ -94,14 +97,21 @@ const ItensListaScreen = () => {
       setModalVisible(false);
       resetModal();
       setEditMode(false);
-      setEditItemId(null);
+      setMenuItemId(null);
     } catch (error) {
       alert("Erro ao salvar item.");
     } finally {
       setLoading(false);
     }
   };
+  const router = useRouter();
 
+  useEffect(() => {
+    if (id) {
+      itemService.getByListId(Number(id)).then(setItems);
+      refreshList();
+    }
+  }, [id]);
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{list?.name || "Lista"}</Text>
@@ -121,72 +131,78 @@ const ItensListaScreen = () => {
           const valorTotal = Number(item.quantity) * Number(item.unit_price);
           return (
             <View style={styles.itemRow}>
-              <Text style={styles.itemName}>{item.name}</Text>
-              <View style={styles.itemInfo}>
-                <Text style={styles.itemQtd}>Qtd: {item.quantity}</Text>
-                <Text style={styles.itemValorTotal}>
-                  R${" "}
-                  {valorTotal.toLocaleString("pt-BR", {
-                    minimumFractionDigits: 2,
-                  })}
-                </Text>
-              </View>
-              <TouchableOpacity
-                style={styles.menuButton}
-                onPress={() =>
-                  setMenuItemId(menuItemId === item.id ? null : item.id)
-                }
+              <View
+                style={{ flex: 1, flexDirection: "row", alignItems: "center" }}
               >
-                <Text style={styles.menuButtonText}>⋮</Text>
-              </TouchableOpacity>
-              {menuItemId === item.id && (
-                <View style={styles.menuOptions}>
-                  <TouchableOpacity
-                    style={styles.menuOption}
-                    onPress={async () => {
-                      setMenuItemId(null);
-                      setEditMode(true);
-                      setEditItemId(item.id);
-                      setNome(item.name);
-                      setMarca(item.brand || "");
-                      setQuantidade(String(item.quantity));
-                      setValor(String(item.unit_price));
-                      setModalVisible(true);
-                    }}
-                  >
-                    <Text style={styles.menuOptionText}>✏️ Editar</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.menuOption}
-                    onPress={() => {
-                      setMenuItemId(null);
-                      Alert.alert(
-                        "Excluir item",
-                        "Tem certeza que deseja remover este item?",
-                        [
-                          { text: "Cancelar", style: "cancel" },
-                          {
-                            text: "Excluir",
-                            style: "destructive",
-                            onPress: async () => {
-                              await itemService.deleteItem(item.id);
-                              const novosItens = await itemService.getByListId(
-                                Number(id)
-                              );
-                              setItems(novosItens);
-                              refreshList();
-                            },
-                          },
-                        ]
-                      );
-                    }}
-                  >
-                    <Text style={[styles.menuOptionText, { color: "red" }]}>
-                      🗑️ Excluir
-                    </Text>
-                  </TouchableOpacity>
+                <Text style={styles.itemName}>{item.name}</Text>
+                <View style={styles.itemInfo}>
+                  <Text style={styles.itemQtd}>Qtd: {item.quantity}</Text>
+                  <Text style={styles.itemValorTotal}>
+                    R${" "}
+                    {valorTotal.toLocaleString("pt-BR", {
+                      minimumFractionDigits: 2,
+                    })}
+                  </Text>
                 </View>
-              )}
+              </View>
+              <View style={{ position: "relative", zIndex: 30, marginLeft: 4 }}>
+                <TouchableOpacity
+                  style={styles.menuButton}
+                  onPress={() =>
+                    setMenuItemId(menuItemId === item.id ? null : item.id)
+                  }
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.menuButtonText}>⋮</Text>
+                </TouchableOpacity>
+                {menuItemId === item.id && (
+                  <View style={styles.menuOptions}>
+                    <TouchableOpacity
+                      style={styles.menuOption}
+                      onPress={async () => {
+                        setMenuItemId(null);
+                        setEditMode(true);
+                        // setEditItemId(item.id); // não utilizado
+                        setNome(item.name);
+                        setMarca(item.brand || "");
+                        setQuantidade(String(item.quantity));
+                        setValor(String(item.unit_price));
+                        setModalVisible(true);
+                      }}
+                    >
+                      <Text style={styles.menuOptionText}>✏️ Editar</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.menuOption}
+                      onPress={() => {
+                        setMenuItemId(null);
+                        Alert.alert(
+                          "Excluir item",
+                          "Tem certeza que deseja remover este item?",
+                          [
+                            { text: "Cancelar", style: "cancel" },
+                            {
+                              text: "Excluir",
+                              style: "destructive",
+                              onPress: async () => {
+                                await itemService.deleteItem(item.id);
+                                const novosItens =
+                                  await itemService.getByListId(Number(id));
+                                setItems(novosItens);
+                                refreshList();
+                              },
+                            },
+                          ]
+                        );
+                      }}
+                    >
+                      <Text style={[styles.menuOptionText, { color: "red" }]}>
+                        🗑️ Excluir
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
             </View>
           );
         }}
@@ -199,7 +215,7 @@ const ItensListaScreen = () => {
         onPress={() => {
           setModalVisible(true);
           setEditMode(false);
-          setEditItemId(null);
+          // setEditItemId(null); // não utilizado
           resetModal();
         }}
       >
@@ -255,7 +271,7 @@ const ItensListaScreen = () => {
                   setModalVisible(false);
                   resetModal();
                   setEditMode(false);
-                  setEditItemId(null);
+                  // setEditItemId(null); // não utilizado
                 }}
                 disabled={loading}
               >

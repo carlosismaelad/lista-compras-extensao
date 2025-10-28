@@ -67,7 +67,9 @@ const ItensListaScreen = () => {
       alert("Quantidade inválida.");
       return;
     }
-    if (!valor || isNaN(Number(valor)) || Number(valor) < 0) {
+    // Aceita vírgula ou ponto como separador decimal
+    const valorNumerico = Number(valor.replace(",", "."));
+    if (!valor || isNaN(valorNumerico) || valorNumerico < 0) {
       alert("Valor inválido.");
       return;
     }
@@ -79,7 +81,7 @@ const ItensListaScreen = () => {
           name: nome,
           brand: marca,
           quantity: Number(quantidade),
-          unit_price: Number(valor),
+          unit_price: valorNumerico,
         });
       } else {
         // Adicionar novo item
@@ -87,7 +89,7 @@ const ItensListaScreen = () => {
           name: nome,
           brand: marca,
           quantity: Number(quantidade),
-          unit_price: Number(valor),
+          unit_price: valorNumerico,
           list_id: Number(id),
         });
       }
